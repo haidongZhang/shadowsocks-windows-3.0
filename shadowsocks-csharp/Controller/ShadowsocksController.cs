@@ -40,7 +40,6 @@ namespace Shadowsocks.Controller
 
         private bool _systemProxyIsDirty = false;
 
-        private static int PORT = 8388;
 
         public class PathEventArgs : EventArgs
         {
@@ -515,53 +514,6 @@ namespace Shadowsocks.Controller
                 Thread.Sleep(30 * 1000);
             }
         }
-        // get available servers from the iplist.txt
-        public List<Server> GetAvailableServers() {
-            List<Server> servers = new List<Server>();
-            _config.ipRangeList = Configuration.LoadIPRange();
-            if (_config.ipRangeList == null)
-                return null;
-
-            foreach (IPRange ipRange in _config.ipRangeList) {
-
-                // handle the the C segment address. if not, change the code.
-                string[] beginIpString = ipRange.beginIP.Split('.');
-                string[] endIpString = ipRange.endIP.Split('.');
-                string prefix = beginIpString[0] + "." + beginIpString[1] + "." + beginIpString[2];
-                int beginNum = int.Parse(beginIpString[3]);
-                int endNum = int.Parse(endIpString[3]);
-
-                for (int i = beginNum; i <= endNum; i++) {
-                    string currentIP = prefix +"." + i.ToString();
-                    if (checkAvailable(currentIP)) {
-                        Server server = new Server();
-                        server.server = currentIP;
-                        server.password = currentIP;
-                        server.server_port = PORT;
-                        server.method = "aes-256-cfb";
-
-                        servers.Add(server);
-                    }
-                }
-            }
-
-            return servers;
-        }
-        // check the server with ip address whether available
-        private bool checkAvailable(string ip) {
-            IPAddress serverIP= IPAddress.Parse(ip);
-            IPEndPoint point = new IPEndPoint(serverIP, PORT);
-            try
-            {
-                TcpClient tcp = new TcpClient();
-                tcp.Connect(point);
-                return true;
-            }
-            catch (Exception) {
-                return false;
-            }
-        }
-
 
     }
 }

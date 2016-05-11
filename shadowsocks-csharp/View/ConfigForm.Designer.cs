@@ -58,6 +58,8 @@
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.RefreshButton = new System.Windows.Forms.Button();
             this.SwitchIPButton = new System.Windows.Forms.Button();
+            this.InformationGroupBox = new System.Windows.Forms.GroupBox();
+            this.InformationLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.ServerGroupBox.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -65,6 +67,7 @@
             this.tableLayoutPanel5.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this.tableLayoutPanel4.SuspendLayout();
+            this.InformationGroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -239,7 +242,7 @@
             this.panel2.Anchor = System.Windows.Forms.AnchorStyles.Top;
             this.panel2.AutoSize = true;
             this.panel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.panel2.Location = new System.Drawing.Point(310, 280);
+            this.panel2.Location = new System.Drawing.Point(287, 280);
             this.panel2.Margin = new System.Windows.Forms.Padding(4);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(0, 0);
@@ -489,6 +492,24 @@
             this.SwitchIPButton.UseVisualStyleBackColor = true;
             this.SwitchIPButton.Click += new System.EventHandler(this.switchIP_Click);
             // 
+            // InformationGroupBox
+            // 
+            this.InformationGroupBox.Controls.Add(this.InformationLabel);
+            this.InformationGroupBox.Location = new System.Drawing.Point(22, 461);
+            this.InformationGroupBox.Name = "InformationGroupBox";
+            this.InformationGroupBox.Size = new System.Drawing.Size(755, 129);
+            this.InformationGroupBox.TabIndex = 10;
+            this.InformationGroupBox.TabStop = false;
+            this.InformationGroupBox.Text = "Information";
+            // 
+            // InformationLabel
+            // 
+            this.InformationLabel.Location = new System.Drawing.Point(20, 37);
+            this.InformationLabel.Name = "InformationLabel";
+            this.InformationLabel.Size = new System.Drawing.Size(723, 61);
+            this.InformationLabel.TabIndex = 0;
+            this.InformationLabel.Text = "label1";
+            // 
             // ConfigForm
             // 
             this.AcceptButton = this.OKButton;
@@ -497,7 +518,8 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.CancelButton = this.MyCancelButton;
-            this.ClientSize = new System.Drawing.Size(861, 550);
+            this.ClientSize = new System.Drawing.Size(815, 622);
+            this.Controls.Add(this.InformationGroupBox);
             this.Controls.Add(this.SwitchIPButton);
             this.Controls.Add(this.RefreshButton);
             this.Controls.Add(this.tableLayoutPanel2);
@@ -524,6 +546,7 @@
             this.tableLayoutPanel5.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel4.ResumeLayout(false);
+            this.InformationGroupBox.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -561,6 +584,8 @@
         private System.Windows.Forms.CheckBox OneTimeAuth;
         private System.Windows.Forms.Button RefreshButton;
         private System.Windows.Forms.Button SwitchIPButton;
+        private System.Windows.Forms.GroupBox InformationGroupBox;
+        private System.Windows.Forms.Label InformationLabel;
     }
 }
 

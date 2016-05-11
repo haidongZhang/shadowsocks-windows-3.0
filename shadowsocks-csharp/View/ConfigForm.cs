@@ -9,6 +9,8 @@ using Microsoft.Win32;
 using Shadowsocks.Controller;
 using Shadowsocks.Model;
 using Shadowsocks.Properties;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Shadowsocks.View
 {
@@ -19,6 +21,9 @@ namespace Shadowsocks.View
         // this is a copy of configuration that we are working on
         private Configuration _modifiedConfiguration;
         private int _lastSelectedIndex = -1;
+
+
+        private static int PORT = 8388;
 
         public ConfigForm(ShadowsocksController controller)
         {
@@ -343,7 +348,7 @@ namespace Shadowsocks.View
 
         private void refresh_Click(object sender, EventArgs e)
         {
-            _modifiedConfiguration.configs = controller.GetAvailableServers();
+            _modifiedConfiguration.configs = GetAvailableServers();
             LoadConfiguration(_modifiedConfiguration);
             ServersListBox.SelectedIndex = _modifiedConfiguration.configs.Count - 1;
             _lastSelectedIndex = ServersListBox.SelectedIndex;
@@ -353,5 +358,59 @@ namespace Shadowsocks.View
         {
 
         }
+
+        // get available servers from the iplist.txt
+        private List<Server> GetAvailableServers()
+        {
+            List<Server> servers = new List<Server>();
+            _modifiedConfiguration.ipRangeList = Configuration.LoadIPRange();
+            if (_modifiedConfiguration.ipRangeList == null)
+                return null;
+
+            foreach (IPRange ipRange in _modifiedConfiguration.ipRangeList)
+            {
+
+                // handle the the C segment address. if not, change the code.
+                string[] beginIpString = ipRange.beginIP.Split('.');
+                string[] endIpString = ipRange.endIP.Split('.');
+                string prefix = beginIpString[0] + "." + beginIpString[1] + "." + beginIpString[2];
+                int beginNum = int.Parse(beginIpString[3]);
+                int endNum = int.Parse(endIpString[3]);
+
+                for (int i = beginNum; i <= endNum; i++)
+                {
+                    string currentIP = prefix + "." + i.ToString();
+                    if (checkAvailable(currentIP))
+                    {
+                        Server server = new Server();
+                        server.server = currentIP;
+                        server.password = currentIP;
+                        server.server_port = PORT;
+                        server.method = "aes-256-cfb";
+
+                        servers.Add(server);
+                    }
+                }
+            }
+
+            return servers;
+        }
+        // check the server with ip address whether available
+        private bool checkAvailable(string ip)
+        {
+            IPAddress serverIP = IPAddress.Parse(ip);
+            IPEndPoint point = new IPEndPoint(serverIP, PORT);
+            try
+            {
+                TcpClient tcp = new TcpClient();
+                tcp.Connect(point);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
     }
 }
