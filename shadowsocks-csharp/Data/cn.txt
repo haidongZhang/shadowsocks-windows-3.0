@@ -51,6 +51,7 @@ Move &Up=上移(&U)
 Move D&own=下移(&O)
 Refresh=刷新
 SwitchIP=切换IP
+Information=信息
 
 # Log Form
 
@@ -103,3 +104,6 @@ Failed to decode QRCode=无法解析二维码
 Failed to update registry=无法修改注册表
 System Proxy On: =系统代理已启用：
 Running: Port {0}=正在运行：端口 {0}
+Current proxy ip is {0}=当前代理IP为 {0}
+Checking ip {0}=检测IP地址 {0}
+Get {0} servers=检测到{0}个可用服务器

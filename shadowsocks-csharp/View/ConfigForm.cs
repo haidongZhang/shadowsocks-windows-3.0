@@ -11,6 +11,7 @@ using Shadowsocks.Model;
 using Shadowsocks.Properties;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace Shadowsocks.View
 {
@@ -61,7 +62,9 @@ namespace Shadowsocks.View
             MoveDownButton.Text = I18N.GetString("Move D&own");
             RefreshButton.Text = I18N.GetString("Refresh");
             SwitchIPButton.Text = I18N.GetString("SwitchIP");
+            InformationGroupBox.Text = I18N.GetString("Information");
             this.Text = I18N.GetString("Edit Servers");
+            InformationLabel.Text = "";
         }
 
         private void controller_ConfigChanged(object sender, EventArgs e)
@@ -346,21 +349,32 @@ namespace Shadowsocks.View
             }
         }
 
-        private void refresh_Click(object sender, EventArgs e)
+        private async void refresh_Click(object sender, EventArgs e)
         {
-            _modifiedConfiguration.configs = GetAvailableServers();
+            _modifiedConfiguration.configs = await GetAvailableServers();
             LoadConfiguration(_modifiedConfiguration);
-            ServersListBox.SelectedIndex = _modifiedConfiguration.configs.Count - 1;
+            ServersListBox.SelectedIndex = 0;
             _lastSelectedIndex = ServersListBox.SelectedIndex;
+            LoadSelectedServer();
         }
 
         private void switchIP_Click(object sender, EventArgs e)
         {
-
+            if (ServersListBox.SelectedIndex + 1 > ServersListBox.Items.Count - 1)
+            {
+                ServersListBox.SelectedIndex = 0;
+            }
+            else
+            {
+                ServersListBox.SelectedIndex++;
+            }
+            _lastSelectedIndex = ServersListBox.SelectedIndex;
+            SaveOldSelectedServer();
+            InformationLabel.Text = String.Format(I18N.GetString("Current proxy ip is {0}"), _modifiedConfiguration.configs[ServersListBox.SelectedIndex].server);
         }
-
+        // @todo complete the async function.
         // get available servers from the iplist.txt
-        private List<Server> GetAvailableServers()
+        private  async Task<List<Server>> GetAvailableServers()
         {
             List<Server> servers = new List<Server>();
             _modifiedConfiguration.ipRangeList = Configuration.LoadIPRange();
@@ -380,7 +394,13 @@ namespace Shadowsocks.View
                 for (int i = beginNum; i <= endNum; i++)
                 {
                     string currentIP = prefix + "." + i.ToString();
-                    if (checkAvailable(currentIP))
+                    InformationLabel.Text = String.Format(I18N.GetString("Checking ip {0}"), currentIP);
+                    /*
+                    Task<bool> task = new Task<bool>(checkAvailable,  currentIP);
+                    task.Start();
+                    */
+                    bool isAvailable = await checkAvailable(currentIP);
+                    if (isAvailable)
                     {
                         Server server = new Server();
                         server.server = currentIP;
@@ -392,12 +412,14 @@ namespace Shadowsocks.View
                     }
                 }
             }
-
+            InformationLabel.Text = String.Format(I18N.GetString("Get {0} servers"),  servers.Count.ToString());
             return servers;
         }
         // check the server with ip address whether available
-        private bool checkAvailable(string ip)
+        /*
+        private bool checkAvailable(object state)
         {
+            string ip = (string)state;
             IPAddress serverIP = IPAddress.Parse(ip);
             IPEndPoint point = new IPEndPoint(serverIP, PORT);
             try
@@ -410,6 +432,38 @@ namespace Shadowsocks.View
             {
                 return false;
             }
+        }
+        */
+        private async Task<bool> checkAvailable(string ip) {
+
+            using (var tcp = new TcpClient())
+            {
+                var ar = tcp.BeginConnect(ip, PORT, null, null);
+                using (ar.AsyncWaitHandle)
+                {
+                    //Wait 2 seconds for connection.
+                    if (ar.AsyncWaitHandle.WaitOne(2000, false))
+                    {
+                        try
+                        {
+                            tcp.EndConnect(ar);
+                            return true;
+                        }
+                        catch
+                        {
+                            //EndConnect threw an exception.
+                            //Most likely means the server refused the connection.
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        //Connection timed out.
+                        return false;
+                    }
+                }
+            }
+
         }
 
     }
