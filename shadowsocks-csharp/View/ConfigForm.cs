@@ -12,6 +12,7 @@ using Shadowsocks.Properties;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Shadowsocks.View
 {
@@ -349,13 +350,10 @@ namespace Shadowsocks.View
             }
         }
 
-        private async void refresh_Click(object sender, EventArgs e)
+        private void refresh_Click(object sender, EventArgs e)
         {
-            _modifiedConfiguration.configs = await GetAvailableServers();
-            LoadConfiguration(_modifiedConfiguration);
-            ServersListBox.SelectedIndex = 0;
-            _lastSelectedIndex = ServersListBox.SelectedIndex;
-            LoadSelectedServer();
+            Thread thread = new Thread(GetAvailableServers);
+            thread.Start();
         }
 
         private void switchIP_Click(object sender, EventArgs e)
@@ -372,14 +370,14 @@ namespace Shadowsocks.View
             SaveOldSelectedServer();
             InformationLabel.Text = String.Format(I18N.GetString("Current proxy ip is {0}"), _modifiedConfiguration.configs[ServersListBox.SelectedIndex].server);
         }
-        // @todo complete the async function.
+
         // get available servers from the iplist.txt
-        private  async Task<List<Server>> GetAvailableServers()
+        private  void  GetAvailableServers()
         {
             List<Server> servers = new List<Server>();
             _modifiedConfiguration.ipRangeList = Configuration.LoadIPRange();
             if (_modifiedConfiguration.ipRangeList == null)
-                return null;
+                return;
 
             foreach (IPRange ipRange in _modifiedConfiguration.ipRangeList)
             {
@@ -395,11 +393,8 @@ namespace Shadowsocks.View
                 {
                     string currentIP = prefix + "." + i.ToString();
                     InformationLabel.Text = String.Format(I18N.GetString("Checking ip {0}"), currentIP);
-                    /*
-                    Task<bool> task = new Task<bool>(checkAvailable,  currentIP);
-                    task.Start();
-                    */
-                    bool isAvailable = await checkAvailable(currentIP);
+                    
+                    bool isAvailable = checkAvailable(currentIP);
                     if (isAvailable)
                     {
                         Server server = new Server();
@@ -413,28 +408,16 @@ namespace Shadowsocks.View
                 }
             }
             InformationLabel.Text = String.Format(I18N.GetString("Get {0} servers"),  servers.Count.ToString());
-            return servers;
+
+            _modifiedConfiguration.configs = servers;
+            LoadConfiguration(_modifiedConfiguration);
+            ServersListBox.SelectedIndex = 0;
+            _lastSelectedIndex = ServersListBox.SelectedIndex;
+            LoadSelectedServer();
+
         }
         // check the server with ip address whether available
-        /*
-        private bool checkAvailable(object state)
-        {
-            string ip = (string)state;
-            IPAddress serverIP = IPAddress.Parse(ip);
-            IPEndPoint point = new IPEndPoint(serverIP, PORT);
-            try
-            {
-                TcpClient tcp = new TcpClient();
-                tcp.Connect(point);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-        */
-        private async Task<bool> checkAvailable(string ip) {
+        private bool checkAvailable(string ip) {
 
             using (var tcp = new TcpClient())
             {
